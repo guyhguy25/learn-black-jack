@@ -37,6 +37,7 @@ import { DealShoe } from "./DealShoe";
 import { DiscardTray } from "./DiscardTray";
 import { FeltMarkings } from "./FeltMarkings";
 import { AnimatedBalance } from "./AnimatedBalance";
+import { ThemeToggle } from "./ThemeToggle";
 
 const MAX_SPOTS = 5;
 /** Fixed artboard — everything inside scales uniformly */
@@ -351,6 +352,7 @@ export function BlackjackGame() {
         </div>
 
         <div className="live-top-actions">
+          <ThemeToggle />
           <button
             type="button"
             className={`live-icon-btn ${chartOpen ? "on" : ""}`}
