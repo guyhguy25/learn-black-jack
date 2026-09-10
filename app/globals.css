@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+[data-theme="dark"] {
   --felt: #0f7a45;
   --felt-dark: #0a5c34;
   --felt-light: #149355;
@@ -12,13 +13,66 @@
   --ink: #0b0b0b;
   --bj-red: #e8e8e8;
   --hud: rgba(8, 10, 12, 0.72);
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
+  --page-bg: #0a0a0a;
+  --page-fg: var(--cream);
+  --studio-top: #2a3340;
+  --studio-mid: #1a222c;
+  --studio-low: #10151c;
+  --studio-bottom: #0a0c10;
+  --bar-bg: rgba(6, 8, 10, 0.55);
+  --bar-bg-strong: rgba(6, 8, 10, 0.72);
+  --bar-border: rgba(255, 255, 255, 0.08);
+  --chrome-fg: #ffffff;
+  --chrome-muted: rgba(255, 255, 255, 0.75);
+  --btn-border: rgba(255, 255, 255, 0.22);
+  --btn-bg: rgba(255, 255, 255, 0.06);
+  --btn-bg-hover: rgba(255, 255, 255, 0.16);
+  --btn-border-hover: rgba(255, 255, 255, 0.45);
+  --overlay-bg: rgba(10, 12, 16, 0.55);
+  --overlay-border: rgba(255, 255, 255, 0.18);
+  --overlay-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --panel-surface: rgba(0, 0, 0, 0.28);
+  --panel-surface-strong: rgba(255, 255, 255, 0.08);
+  --settings-scrim: rgba(0, 0, 0, 0.65);
+  --settings-panel: linear-gradient(180deg, #1a222c, #10151c);
+  --settings-field-bg: #243044;
+  --settings-field-fg: #f3efe4;
+  --scheme: dark;
+}
+
+[data-theme="light"] {
+  --cream: #1c1914;
+  --ink: #f7f4ee;
+  --page-bg: #e8e2d6;
+  --page-fg: #1c1914;
+  --studio-top: #f4efe6;
+  --studio-mid: #ebe4d6;
+  --studio-low: #ddd4c4;
+  --studio-bottom: #d0c6b4;
+  --bar-bg: rgba(255, 252, 245, 0.82);
+  --bar-bg-strong: rgba(255, 252, 245, 0.9);
+  --bar-border: rgba(40, 30, 15, 0.12);
+  --chrome-fg: #1a1610;
+  --chrome-muted: rgba(26, 22, 16, 0.7);
+  --btn-border: rgba(40, 30, 15, 0.22);
+  --btn-bg: rgba(40, 30, 15, 0.06);
+  --btn-bg-hover: rgba(40, 30, 15, 0.12);
+  --btn-border-hover: rgba(40, 30, 15, 0.4);
+  --overlay-bg: rgba(255, 252, 245, 0.88);
+  --overlay-border: rgba(40, 30, 15, 0.16);
+  --overlay-shadow: 0 18px 40px rgba(60, 40, 20, 0.18);
+  --panel-surface: rgba(40, 30, 15, 0.06);
+  --panel-surface-strong: rgba(40, 30, 15, 0.1);
+  --settings-scrim: rgba(40, 30, 15, 0.4);
+  --settings-panel: linear-gradient(180deg, #fffdf8, #f3efe4);
+  --settings-field-bg: #fff;
+  --settings-field-fg: #1c1914;
+  --scheme: light;
 }
 
 @theme inline {
-  --color-background: #0b0b0b;
-  --color-foreground: var(--cream);
+  --color-background: var(--page-bg);
+  --color-foreground: var(--page-fg);
   --font-sans: var(--font-body);
 }
 
@@ -27,7 +81,7 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: var(--scheme);
 }
 
 html,
@@ -38,9 +92,9 @@ body {
 body {
   margin: 0;
   min-height: 100%;
-  color: var(--cream);
+  color: var(--page-fg);
   font-family: var(--font-body), "Segoe UI", sans-serif;
-  background: #0a0a0a;
+  background: var(--page-bg);
 }
 
 button,
@@ -53,10 +107,11 @@ select {
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
+  color: var(--chrome-fg);
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, #2a3340 0%, transparent 55%),
-    linear-gradient(180deg, #1a222c 0%, #10151c 40%, #0a0c10 100%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, var(--studio-top) 0%, transparent 55%),
+    linear-gradient(180deg, var(--studio-mid) 0%, var(--studio-low) 40%, var(--studio-bottom) 100%);
 }
 
 /* —— Top HUD —— */
@@ -68,8 +123,8 @@ select {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.65rem 1rem;
-  background: rgba(6, 8, 10, 0.55);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bar-bg);
+  border-bottom: 1px solid var(--bar-border);
   backdrop-filter: blur(12px);
 }
 
@@ -77,7 +132,7 @@ select {
   font-family: var(--font-display), Georgia, serif;
   font-weight: 700;
   font-size: 1.15rem;
-  color: #fff;
+  color: var(--chrome-fg);
   letter-spacing: 0.02em;
 }
 
@@ -85,7 +140,7 @@ select {
   display: flex;
   gap: 0.75rem;
   font-size: 0.75rem;
-  opacity: 0.75;
+  color: var(--chrome-muted);
   margin-top: 0.15rem;
 }
 
@@ -94,7 +149,7 @@ select {
   flex-wrap: wrap;
   gap: 0.85rem;
   font-size: 0.8rem;
-  opacity: 0.85;
+  color: var(--chrome-muted);
 }
 
 .live-top-actions {
@@ -103,9 +158,9 @@ select {
 }
 
 .live-icon-btn {
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--chrome-fg);
   border-radius: 999px;
   padding: 0.4rem 0.85rem;
   cursor: pointer;
@@ -114,8 +169,8 @@ select {
 
 .live-icon-btn:hover,
 .live-icon-btn.on {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--btn-bg-hover);
+  border-color: var(--btn-border-hover);
 }
 
 .live-icon-btn:disabled {
@@ -132,10 +187,11 @@ select {
   flex-direction: column;
   padding: 0.85rem;
   border-radius: 1rem;
-  background: rgba(10, 12, 16, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--chrome-fg);
+  background: var(--overlay-bg);
+  border: 1px solid var(--overlay-border);
   backdrop-filter: blur(16px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--overlay-shadow);
   animation: overlay-in 0.22s ease;
   pointer-events: auto;
 }
@@ -174,7 +230,7 @@ select {
   margin: 0;
   font-family: var(--font-display), Georgia, serif;
   font-size: 1.05rem;
-  color: #fff;
+  color: var(--chrome-fg);
 }
 
 .float-header-actions {
@@ -184,15 +240,15 @@ select {
 
 .ghost-btn {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #fff;
+  border: 1px solid var(--btn-border);
+  color: var(--chrome-fg);
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
   cursor: pointer;
 }
 
 .ghost-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--btn-bg-hover);
 }
 
 .chart-scroll {
@@ -215,7 +271,7 @@ select {
   display: inline-block;
   margin-top: 0.45rem;
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--chrome-muted);
 }
 
 .count-hidden-msg {
@@ -232,15 +288,15 @@ select {
 }
 
 .count-stat {
-  background: rgba(0, 0, 0, 0.28);
+  background: var(--panel-surface);
   border-radius: 0.65rem;
   padding: 0.5rem 0.6rem;
 }
 
 .count-stat.primary {
   grid-column: 1 / -1;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--panel-surface-strong);
+  border: 1px solid var(--overlay-border);
 }
 
 .count-stat .label {
@@ -254,11 +310,11 @@ select {
 .count-stat .value {
   font-family: var(--font-display), Georgia, serif;
   font-size: 1.35rem;
-  color: #fff;
+  color: var(--chrome-fg);
 }
 
 .hi-lo-key {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--bar-border);
   padding-top: 0.65rem;
   font-size: 0.85rem;
 }
@@ -1733,15 +1789,16 @@ select {
 .live-hud {
   position: absolute;
   left: 50%;
-  bottom: 0.5rem;
+  bottom: 0.1rem;
   transform: translateX(-50%);
   z-index: 30;
   width: min(920px, calc(100% - 1rem));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.65rem 0.85rem 0.55rem;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem 0.2rem;
   margin: 0;
   pointer-events: none;
   background: transparent;
@@ -1751,12 +1808,11 @@ select {
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  /* Keep layout box reserved so table scale stays stable */
-  min-height: 9.5rem;
+  min-height: 0;
 }
 
 .live-hud.is-open {
-  min-height: 9.5rem;
+  min-height: 0;
 }
 
 .live-hud .bet-controls,
@@ -1809,21 +1865,35 @@ select {
   gap: 0.35rem;
   padding: 0.28rem 0.65rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px);
+  color: #fff;
 }
 
 .money-label {
   font-size: 0.58rem;
   letter-spacing: 0.08em;
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.78);
+  opacity: 1;
 }
 
 .money-pill strong {
   font-family: var(--font-display), Georgia, serif;
   font-size: 0.95rem;
   color: #fff;
+}
+
+/* Felt money readout stays white in every theme */
+.table-money,
+.table-money .money-label,
+.table-money .money-pill,
+.table-money .money-pill strong {
+  color: #fff;
+}
+
+.table-money .money-label {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .live-status {
@@ -1991,13 +2061,69 @@ select {
   border-radius: 999px;
 }
 
-.hint-seat {
-  font-size: 0.78rem;
-  opacity: 0.65;
-}
-
 .live-chip {
   display: none;
+}
+
+.seat-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  z-index: 8;
+  width: max-content;
+  max-width: 160px;
+  padding: 0.45rem 0.55rem 0.5rem;
+  border-radius: 0.65rem;
+  background: rgba(8, 10, 12, 0.92);
+  border: 1px solid rgba(240, 215, 140, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  text-align: center;
+  pointer-events: auto;
+  animation: overlay-in 0.22s ease;
+}
+
+.seat-tip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: rgba(8, 10, 12, 0.92);
+}
+
+.seat-tip p {
+  margin: 0 0 0.4rem;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.seat-tip-dismiss {
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.seat-tip-dismiss:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.spot.multi-seat.tip-highlight .multi-bubble {
+  box-shadow:
+    0 0 0 3px rgba(240, 215, 140, 0.95),
+    0 0 18px rgba(240, 215, 140, 0.45);
+  animation: seat-pulse 1.4s ease-in-out infinite;
 }
 
 .action-controls {
@@ -2066,48 +2192,11 @@ select {
   font-weight: 600;
 }
 
-/* —— Bottom bar —— */
-.live-bottom {
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 0.55rem 1rem;
-  min-height: 2.5rem;
-  box-sizing: border-box;
-  background: rgba(6, 8, 10, 0.72);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-}
-
-.hint-seat.is-invisible {
-  visibility: hidden;
-}
-
-.live-bottom-left,
-.live-bottom-right {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-}
-
-.live-bottom-left span {
-  font-size: 0.85rem;
-  opacity: 0.85;
-}
-
-.live-bottom-left strong {
-  color: #fff;
-  font-family: var(--font-display), Georgia, serif;
-}
-
 /* Settings */
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--settings-scrim);
   display: grid;
   place-items: center;
   padding: 1rem;
@@ -2118,8 +2207,9 @@ select {
   width: min(560px, 100%);
   max-height: 90vh;
   overflow: auto;
-  background: linear-gradient(180deg, #1a222c, #10151c);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--chrome-fg);
+  background: var(--settings-panel);
+  border: 1px solid var(--overlay-border);
   border-radius: 1rem;
   padding: 1.25rem;
 }
@@ -2134,7 +2224,7 @@ select {
 .settings-header h2 {
   margin: 0;
   font-family: var(--font-display), Georgia, serif;
-  color: #fff;
+  color: var(--chrome-fg);
 }
 
 .settings-grid {
@@ -2148,7 +2238,7 @@ select {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.55rem 0.7rem;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--panel-surface);
   border-radius: 0.65rem;
   font-size: 0.9rem;
 }
@@ -2168,12 +2258,12 @@ select {
   width: auto;
   min-width: 7rem;
   max-width: 14rem;
-  background: #243044;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #f3efe4;
+  background: var(--settings-field-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--settings-field-fg);
   border-radius: 0.4rem;
   padding: 0.35rem 0.5rem;
-  color-scheme: dark;
+  color-scheme: var(--scheme);
 }
 
 .setting select option {
@@ -2192,7 +2282,7 @@ select {
 .settings-players {
   margin: 1.25rem 0;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--bar-border);
 }
 
 .settings-players h3 {
@@ -2224,9 +2314,26 @@ select {
 
 .action-btn.secondary,
 .action-btn.ghost {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--btn-bg);
+  color: var(--chrome-fg);
+  border: 1px solid var(--btn-border);
+}
+
+[data-theme="light"] .studio-glow {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(212, 168, 75, 0.18), transparent 28%),
+    radial-gradient(circle at 80% 18%, rgba(212, 168, 75, 0.14), transparent 26%),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.35), transparent 40%);
+}
+
+[data-theme="light"] .hi-lo-key .plus {
+  color: #0f7a45;
+}
+[data-theme="light"] .hi-lo-key .zero {
+  color: #9a6b1a;
+}
+[data-theme="light"] .hi-lo-key .minus {
+  color: #c0392b;
 }
 
 @media (max-width: 700px) {

@@ -37,6 +37,8 @@ import { DealShoe } from "./DealShoe";
 import { DiscardTray } from "./DiscardTray";
 import { FeltMarkings } from "./FeltMarkings";
 import { AnimatedBalance } from "./AnimatedBalance";
+import { ThemeToggle } from "./ThemeToggle";
+import { dismissSeatTip, isSeatTipDismissed } from "@/lib/theme";
 
 const MAX_SPOTS = 5;
 /** Fixed artboard — everything inside scales uniformly */
@@ -117,6 +119,7 @@ export function BlackjackGame() {
   const [clearing, setClearing] = useState(false);
   const [tableScale, setTableScale] = useState(1);
   const [betSeatId, setBetSeatId] = useState("seat-0");
+  const [seatTipVisible, setSeatTipVisible] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const tableWrapRef = useRef<HTMLDivElement>(null);
 
@@ -169,6 +172,7 @@ export function BlackjackGame() {
       setState(initial);
       setLastBet(saved.settings.minBet);
     }
+    setSeatTipVisible(!isSeatTipDismissed());
     setPersistReady(true);
   }, []);
 
@@ -185,7 +189,7 @@ export function BlackjackGame() {
       const w = el.clientWidth;
       // Use window height with a fixed chrome reserve so HUD show/hide
       // never changes the scale (absolute overlay must not reflow the table).
-      const chrome = 280;
+      const chrome = 220;
       const availableH = Math.max(240, window.innerHeight - chrome);
       const byW = w / TABLE_W;
       const byH = availableH / TABLE_H;
@@ -325,6 +329,15 @@ export function BlackjackGame() {
     if (betSeatId === seatId) setBetSeatId(human.id);
   };
 
+  const tipSeatIndex = spots.findIndex((s) => s === null);
+  const showSeatTip =
+    waitingBets && seatTipVisible && tipSeatIndex >= 0 && !busy;
+
+  const hideSeatTip = () => {
+    dismissSeatTip();
+    setSeatTipVisible(false);
+  };
+
   return (
     <div className="live-casino">
       <header className="live-top">
@@ -351,6 +364,7 @@ export function BlackjackGame() {
         </div>
 
         <div className="live-top-actions">
+          <ThemeToggle />
           <button
             type="button"
             className={`live-icon-btn ${chartOpen ? "on" : ""}`}
@@ -459,17 +473,49 @@ export function BlackjackGame() {
                     };
 
                     if (!seat) {
+                      const showTipHere = showSeatTip && idx === tipSeatIndex;
                       return (
                         <button
                           key={`empty-${idx}`}
                           type="button"
-                          className="spot multi-seat"
+                          className={`spot multi-seat ${showTipHere ? "tip-highlight" : ""}`}
                           style={style}
                           disabled={
                             !waitingBets || state.seats.length >= MAX_SPOTS
                           }
                           onClick={() => claimMultiSeat(idx)}
                         >
+                          {showTipHere && (
+                            <div
+                              className="seat-tip"
+                              role="status"
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                            >
+                              <p>
+                                Tap MULTI SEAT to add players · tap a seat to
+                                set its bet
+                              </p>
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                className="seat-tip-dismiss"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  hideSeatTip();
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    hideSeatTip();
+                                  }
+                                }}
+                              >
+                                Got it
+                              </span>
+                            </div>
+                          )}
                           <span className="multi-bubble">
                             <span className="multi-icon" aria-hidden="true">
                               <svg viewBox="0 0 24 24" width="22" height="22">
@@ -764,12 +810,6 @@ export function BlackjackGame() {
           )}
         </div>
       </div>
-
-      <footer className="live-bottom">
-        <span className={`hint-seat ${waitingBets ? "" : "is-invisible"}`}>
-          Tap MULTI SEAT to add players · tap a seat to set its bet
-        </span>
-      </footer>
 
       <SettingsPanel
         settings={state.settings}
