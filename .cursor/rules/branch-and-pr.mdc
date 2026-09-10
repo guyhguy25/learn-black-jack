@@ -1,0 +1,27 @@
+---
+description: All work ships via a feature branch and PR into master
+alwaysApply: true
+---
+
+# Branch + PR workflow
+
+Never commit feature work directly on `master`. For every change set in this repo:
+
+1. **Branch first** — create and switch to a new branch from up-to-date `master` before editing (e.g. `feat/theme-toggle`, `fix/mobile-layout`).
+2. **Commit on the branch** — only when the user asks to commit; keep commits scoped to that task.
+3. **Open a PR into `master`** — push with `-u` and create a PR targeting `master` (use `gh pr create`). Do not merge unless the user explicitly asks.
+4. **One concern per PR** — do not mix unrelated features (e.g. theme + mobile) in the same branch/PR.
+5. **Stay off master** — if already on `master` with uncommitted work, create a branch before committing; never push straight to `master` for app changes.
+
+```bash
+# ✅ typical flow
+git checkout master && git pull
+git checkout -b feat/short-description
+# ... work ...
+git push -u origin HEAD
+gh pr create --base master --title "..." --body "..."
+
+# ❌ avoid
+git checkout master
+# edit + commit + push to master
+```
