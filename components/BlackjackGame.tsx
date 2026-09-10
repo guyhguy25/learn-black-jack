@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   accuracy,
   addSeat,
@@ -28,6 +28,15 @@ import { loadPersisted, savePersisted } from "@/lib/persist";
 import { evaluateHand } from "@/lib/cards";
 import { countLabel, trueCount } from "@/lib/counting";
 import { Action, actionLabel } from "@/lib/strategy";
+import {
+  TABLE_H,
+  TABLE_W,
+  computeTableScale,
+  isNarrowViewport,
+  measureMobileTableBox,
+  NARROW_MQ,
+} from "@/lib/tableScale";
+import { dismissSeatTip, isSeatTipDismissed } from "@/lib/theme";
 import { PlayingCard } from "./PlayingCard";
 import { CountPanel } from "./CountPanel";
 import { ChartPanel } from "./ChartPanel";
@@ -38,12 +47,8 @@ import { DiscardTray } from "./DiscardTray";
 import { FeltMarkings } from "./FeltMarkings";
 import { AnimatedBalance } from "./AnimatedBalance";
 import { ThemeToggle } from "./ThemeToggle";
-import { dismissSeatTip, isSeatTipDismissed } from "@/lib/theme";
 
 const MAX_SPOTS = 5;
-/** Fixed artboard — everything inside scales uniformly */
-const TABLE_W = 1100;
-const TABLE_H = 700;
 
 function seatAngle(index: number, total: number) {
   if (total <= 1) return 0;
@@ -117,7 +122,9 @@ export function BlackjackGame() {
   const [lastBet, setLastBet] = useState(DEFAULT_SETTINGS.minBet);
   const [dealingAnim, setDealingAnim] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [tableScale, setTableScale] = useState(1);
+  // Never start at 1 — phones would flash a fully-zoomed table before measure.
+  const [tableScale, setTableScale] = useState(0.3);
+  const [narrowUi, setNarrowUi] = useState(false);
   const [betSeatId, setBetSeatId] = useState("seat-0");
   const [seatTipVisible, setSeatTipVisible] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -160,6 +167,66 @@ export function BlackjackGame() {
 
   useEffect(() => () => clearTimers(), []);
 
+  useLayoutEffect(() => {
+    const mq = window.matchMedia(NARROW_MQ);
+    const stage = () =>
+      tableWrapRef.current?.closest(".live-stage") as HTMLElement | null;
+
+    const applyNarrowAttr = (on: boolean) => {
+      document.documentElement.setAttribute("data-narrow", on ? "1" : "0");
+      setNarrowUi(on);
+    };
+
+    const updateScale = () => {
+      const mobile = isNarrowViewport();
+      applyNarrowAttr(mobile);
+      const el = tableWrapRef.current;
+      const stageEl = stage();
+      if (!el) return;
+
+      if (mobile) {
+        const box = measureMobileTableBox(stageEl);
+        const next = computeTableScale({
+          mobile: true,
+          width: box.width,
+          height: box.height,
+        });
+        setTableScale((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
+        return;
+      }
+
+      const viewH = window.visualViewport?.height ?? window.innerHeight;
+      const next = computeTableScale({
+        mobile: false,
+        width: Math.max(1, el.clientWidth),
+        height: Math.max(240, viewH - 220),
+      });
+      setTableScale((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
+    };
+
+    applyNarrowAttr(mq.matches);
+    updateScale();
+    // Second pass after narrow layout (flex dock) commits.
+    const raf = requestAnimationFrame(() => updateScale());
+
+    const ro = new ResizeObserver(updateScale);
+    if (tableWrapRef.current) ro.observe(tableWrapRef.current);
+    const stageEl = stage();
+    if (stageEl) ro.observe(stageEl);
+
+    window.addEventListener("resize", updateScale);
+    window.visualViewport?.addEventListener("resize", updateScale);
+    mq.addEventListener("change", updateScale);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener("resize", updateScale);
+      window.visualViewport?.removeEventListener("resize", updateScale);
+      mq.removeEventListener("change", updateScale);
+    };
+  }, []);
+
   // Load localStorage only after mount so SSR HTML matches the first client paint
   useEffect(() => {
     const saved = loadPersisted();
@@ -180,32 +247,6 @@ export function BlackjackGame() {
     if (!persistReady) return;
     savePersisted(state.settings, sharedBankroll);
   }, [state.settings, sharedBankroll, persistReady]);
-
-  useEffect(() => {
-    const el = tableWrapRef.current;
-    if (!el) return;
-    const stage = el.closest(".live-stage") as HTMLElement | null;
-    const update = () => {
-      const w = el.clientWidth;
-      // Use window height with a fixed chrome reserve so HUD show/hide
-      // never changes the scale (absolute overlay must not reflow the table).
-      const chrome = 220;
-      const availableH = Math.max(240, window.innerHeight - chrome);
-      const byW = w / TABLE_W;
-      const byH = availableH / TABLE_H;
-      const next = Math.max(0.38, Math.min(byW, byH, 1.55));
-      setTableScale((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    if (stage) ro.observe(stage);
-    window.addEventListener("resize", update);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", update);
-    };
-  }, []);
 
   const apply = (fn: (s: GameState) => GameState) => setState((s) => fn(s));
 
@@ -329,7 +370,16 @@ export function BlackjackGame() {
     if (betSeatId === seatId) setBetSeatId(human.id);
   };
 
-  const tipSeatIndex = spots.findIndex((s) => s === null);
+  const tipSeatIndex = (() => {
+    const empties = spots
+      .map((seat, index) => (seat === null ? index : -1))
+      .filter((index) => index >= 0);
+    if (empties.length === 0) return -1;
+    // Prefer an empty seat near the center so the tip stays on-screen on phones.
+    return empties.reduce((best, index) =>
+      Math.abs(index - 2) < Math.abs(best - 2) ? index : best,
+    );
+  })();
   const showSeatTip =
     waitingBets && seatTipVisible && tipSeatIndex >= 0 && !busy;
 
@@ -339,7 +389,7 @@ export function BlackjackGame() {
   };
 
   return (
-    <div className="live-casino">
+    <div className={`live-casino ${narrowUi ? "is-narrow" : ""}`}>
       <header className="live-top">
         <div className="live-top-left">
           <div className="live-logo">Strategy Table</div>
@@ -408,14 +458,20 @@ export function BlackjackGame() {
         <div
           className="table-scale-wrap"
           ref={tableWrapRef}
-          style={{ height: TABLE_H * tableScale }}
+          style={
+            narrowUi
+              ? { height: "auto" }
+              : { height: TABLE_H * tableScale }
+          }
         >
             <div
               className={`live-table ${clearing ? "is-clearing" : ""}`}
               style={{
                 width: TABLE_W,
                 height: TABLE_H,
-                transform: `translateX(-50%) scale(${tableScale})`,
+                transform: narrowUi
+                  ? `translate(-50%, -50%) scale(${tableScale})`
+                  : `translateX(-50%) scale(${tableScale})`,
               }}
             >
             <div className="table-rim">
