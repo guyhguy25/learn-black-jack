@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
+import { NARROW_MQ } from "@/lib/tableScale";
 import "./globals.css";
 
 const display = Fraunces({
@@ -28,7 +29,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const themeBootScript = `(function(){try{var k=${JSON.stringify(THEME_STORAGE_KEY)};var t=localStorage.getItem(k);document.documentElement.setAttribute("data-theme",t==="light"||t==="dark"?t:"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
+const themeBootScript = `(function(){try{var k=${JSON.stringify(THEME_STORAGE_KEY)};var t=localStorage.getItem(k);document.documentElement.setAttribute("data-theme",t==="light"||t==="dark"?t:"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}try{var narrow=window.matchMedia(${JSON.stringify(NARROW_MQ)}).matches;document.documentElement.setAttribute("data-narrow",narrow?"1":"0");}catch(e){document.documentElement.setAttribute("data-narrow","0");}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

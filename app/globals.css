@@ -2336,6 +2336,44 @@ select {
   color: #c0392b;
 }
 
+/* Boot-script / layout flag: kill desktop inline height before React hydrates */
+html[data-narrow="1"] .table-scale-wrap {
+  height: auto !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-width: none;
+  overflow: hidden;
+}
+
+html[data-narrow="1"] .live-stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+html[data-narrow="1"] .live-table {
+  top: 50%;
+  left: 50%;
+}
+
+html[data-narrow="1"] .dealer-backdrop {
+  display: none;
+}
+
+html[data-narrow="1"] .live-hud {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: none;
+  margin-top: auto;
+}
+
 @media (max-width: 700px) {
   /* Mobile game shell: full table visible + bottom control dock
      (inspired by landscape casino apps — contain, don't crop-zoom). */
