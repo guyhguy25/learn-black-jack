@@ -44,6 +44,8 @@ const MAX_SPOTS = 5;
 /** Fixed artboard — everything inside scales uniformly */
 const TABLE_W = 1100;
 const TABLE_H = 700;
+/** Approx horizontal span of the seat arc in artboard px (for mobile edge fit) */
+const SEAT_SPAN_W = 640;
 
 function seatAngle(index: number, total: number) {
   if (total <= 1) return 0;
@@ -187,13 +189,16 @@ export function BlackjackGame() {
     const stage = el.closest(".live-stage") as HTMLElement | null;
     const update = () => {
       const w = el.clientWidth;
-      // Use window height with a fixed chrome reserve so HUD show/hide
-      // never changes the scale (absolute overlay must not reflow the table).
-      const chrome = 220;
-      const availableH = Math.max(240, window.innerHeight - chrome);
+      const mobile = window.matchMedia("(max-width: 700px)").matches;
+      // Mobile: reserve compact header + bottom HUD; grow table so seats near edges.
+      const chrome = mobile ? 200 : 220;
+      const availableH = Math.max(200, window.innerHeight - chrome);
       const byW = w / TABLE_W;
       const byH = availableH / TABLE_H;
-      const next = Math.max(0.38, Math.min(byW, byH, 1.55));
+      const bySeats = (w - 28) / SEAT_SPAN_W;
+      const next = mobile
+        ? Math.max(0.3, Math.min(bySeats, byH, 1.15))
+        : Math.max(0.38, Math.min(byW, byH, 1.55));
       setTableScale((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
     };
     update();
@@ -201,9 +206,12 @@ export function BlackjackGame() {
     ro.observe(el);
     if (stage) ro.observe(stage);
     window.addEventListener("resize", update);
+    const mq = window.matchMedia("(max-width: 700px)");
+    mq.addEventListener("change", update);
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", update);
+      mq.removeEventListener("change", update);
     };
   }, []);
 
@@ -329,7 +337,16 @@ export function BlackjackGame() {
     if (betSeatId === seatId) setBetSeatId(human.id);
   };
 
-  const tipSeatIndex = spots.findIndex((s) => s === null);
+  const tipSeatIndex = (() => {
+    const empties = spots
+      .map((seat, index) => (seat === null ? index : -1))
+      .filter((index) => index >= 0);
+    if (empties.length === 0) return -1;
+    // Prefer an empty seat near the center so the tip stays on-screen on phones.
+    return empties.reduce((best, index) =>
+      Math.abs(index - 2) < Math.abs(best - 2) ? index : best,
+    );
+  })();
   const showSeatTip =
     waitingBets && seatTipVisible && tipSeatIndex >= 0 && !busy;
 
