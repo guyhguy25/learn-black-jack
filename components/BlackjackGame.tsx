@@ -44,8 +44,6 @@ const MAX_SPOTS = 5;
 /** Fixed artboard — everything inside scales uniformly */
 const TABLE_W = 1100;
 const TABLE_H = 700;
-/** Approx horizontal span of the seat arc in artboard px (for mobile edge fit) */
-const SEAT_SPAN_W = 640;
 
 function seatAngle(index: number, total: number) {
   if (total <= 1) return 0;
@@ -120,6 +118,7 @@ export function BlackjackGame() {
   const [dealingAnim, setDealingAnim] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [tableScale, setTableScale] = useState(1);
+  const [narrowUi, setNarrowUi] = useState(false);
   const [betSeatId, setBetSeatId] = useState("seat-0");
   const [seatTipVisible, setSeatTipVisible] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -184,20 +183,36 @@ export function BlackjackGame() {
   }, [state.settings, sharedBankroll, persistReady]);
 
   useEffect(() => {
+    const mq = window.matchMedia(
+      "(max-width: 700px), (max-height: 520px) and (orientation: landscape)",
+    );
+    const sync = () => setNarrowUi(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
     const el = tableWrapRef.current;
     if (!el) return;
     const stage = el.closest(".live-stage") as HTMLElement | null;
     const update = () => {
-      const w = el.clientWidth;
-      const mobile = window.matchMedia("(max-width: 700px)").matches;
-      // Mobile: reserve compact header + bottom HUD; grow table so seats near edges.
-      const chrome = mobile ? 200 : 220;
-      const availableH = Math.max(200, window.innerHeight - chrome);
+      const mobile = window.matchMedia(
+        "(max-width: 700px), (max-height: 520px) and (orientation: landscape)",
+      ).matches;
+      const w = Math.max(1, el.clientWidth);
+      // Prefer the real layout box (and visualViewport on phones — DevTools often lies).
+      const viewH = window.visualViewport?.height ?? window.innerHeight;
+      const wrapH = el.clientHeight;
+      const stageH = stage?.clientHeight ?? 0;
+      const availableH = mobile
+        ? Math.max(140, wrapH > 40 ? wrapH : stageH || viewH * 0.55)
+        : Math.max(240, viewH - 220);
       const byW = w / TABLE_W;
       const byH = availableH / TABLE_H;
-      const bySeats = (w - 28) / SEAT_SPAN_W;
+      // Mobile: CONTAIN the whole table (no seat-zoom crop). Desktop: previous fit.
       const next = mobile
-        ? Math.max(0.3, Math.min(bySeats, byH, 1.15))
+        ? Math.max(0.16, Math.min(byW, byH) * 0.97)
         : Math.max(0.38, Math.min(byW, byH, 1.55));
       setTableScale((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
     };
@@ -206,14 +221,18 @@ export function BlackjackGame() {
     ro.observe(el);
     if (stage) ro.observe(stage);
     window.addEventListener("resize", update);
-    const mq = window.matchMedia("(max-width: 700px)");
+    window.visualViewport?.addEventListener("resize", update);
+    const mq = window.matchMedia(
+      "(max-width: 700px), (max-height: 520px) and (orientation: landscape)",
+    );
     mq.addEventListener("change", update);
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
       mq.removeEventListener("change", update);
     };
-  }, []);
+  }, [narrowUi]);
 
   const apply = (fn: (s: GameState) => GameState) => setState((s) => fn(s));
 
@@ -356,7 +375,7 @@ export function BlackjackGame() {
   };
 
   return (
-    <div className="live-casino">
+    <div className={`live-casino ${narrowUi ? "is-narrow" : ""}`}>
       <header className="live-top">
         <div className="live-top-left">
           <div className="live-logo">Strategy Table</div>
@@ -425,14 +444,20 @@ export function BlackjackGame() {
         <div
           className="table-scale-wrap"
           ref={tableWrapRef}
-          style={{ height: TABLE_H * tableScale }}
+          style={
+            narrowUi
+              ? undefined
+              : { height: TABLE_H * tableScale }
+          }
         >
             <div
               className={`live-table ${clearing ? "is-clearing" : ""}`}
               style={{
                 width: TABLE_W,
                 height: TABLE_H,
-                transform: `translateX(-50%) scale(${tableScale})`,
+                transform: narrowUi
+                  ? `translate(-50%, -50%) scale(${tableScale})`
+                  : `translateX(-50%) scale(${tableScale})`,
               }}
             >
             <div className="table-rim">

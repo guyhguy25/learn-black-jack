@@ -2337,20 +2337,22 @@ select {
 }
 
 @media (max-width: 700px) {
+  /* Mobile game shell: full table visible + bottom control dock
+     (inspired by landscape casino apps — contain, don't crop-zoom). */
   .live-casino {
     min-height: 100dvh;
+    min-height: 100svh;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .live-top {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "brand actions"
-      "stats stats";
+    grid-template-areas: "brand actions";
     align-items: center;
     gap: 0.35rem 0.5rem;
-    padding: 0.45rem 0.65rem;
-    padding-top: max(0.45rem, env(safe-area-inset-top));
+    padding: 0.4rem 0.55rem;
+    padding-top: max(0.4rem, env(safe-area-inset-top));
   }
 
   .live-top-left {
@@ -2359,20 +2361,18 @@ select {
   }
 
   .live-top-stats {
-    grid-area: stats;
-    font-size: 0.68rem;
-    gap: 0.55rem;
+    display: none;
   }
 
   .live-top-actions {
     grid-area: actions;
     flex-wrap: nowrap;
-    gap: 0.3rem;
+    gap: 0.25rem;
   }
 
   .live-logo {
-    font-size: 1rem;
-    line-height: 1.15;
+    font-size: 0.95rem;
+    line-height: 1.1;
   }
 
   .live-meta {
@@ -2380,53 +2380,80 @@ select {
   }
 
   .live-icon-btn {
-    padding: 0.38rem 0.55rem;
-    font-size: 0.72rem;
+    padding: 0.36rem 0.5rem;
+    font-size: 0.7rem;
     white-space: nowrap;
   }
 
   .live-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     padding: 0;
     gap: 0;
-    justify-content: center;
-    /* Reserve space so the absolute HUD doesn't cover seats */
-    padding-bottom: 11.5rem;
+    justify-content: flex-start;
+    overflow: hidden;
   }
 
-  /* Pull dealer out of flow so the table can claim full width */
+  /* Refs don't use a big dealer avatar — free space for the felt */
   .dealer-backdrop {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    z-index: 4;
-    margin: 0;
-    transform: translateX(-50%) scale(0.48);
-    transform-origin: top center;
-    opacity: 0.95;
-  }
-
-  .dealer-nameplate {
     display: none;
   }
 
   .table-scale-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
     width: 100%;
     max-width: none;
     margin: 0;
+    overflow: hidden;
   }
 
+  .live-table {
+    top: 50%;
+    left: 50%;
+  }
+
+  /* Bottom dock in document flow (like native casino apps) */
   .live-hud {
-    bottom: max(0.2rem, env(safe-area-inset-bottom));
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    z-index: 30;
     width: 100%;
     max-width: none;
-    padding: 0.15rem 0.4rem 0.1rem;
-    gap: 0.25rem;
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 0.35rem 0.5rem max(0.35rem, env(safe-area-inset-bottom));
+    gap: 0.35rem;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(6, 8, 10, 0.55) 28%,
+      rgba(6, 8, 10, 0.88) 100%
+    );
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .live-hud.is-hidden {
+    min-height: 0;
+    padding-top: 0.15rem;
+    padding-bottom: max(0.15rem, env(safe-area-inset-bottom));
+    border-top: none;
+    background: transparent;
+  }
+
+  .live-hud.is-open {
+    min-height: 0;
   }
 
   .bet-controls {
     width: 100%;
-    gap: 0.25rem;
-    justify-content: stretch;
+    gap: 0.3rem;
+    justify-content: center;
     flex-wrap: nowrap;
     align-items: center;
   }
@@ -2435,12 +2462,12 @@ select {
     flex: 1 1 auto;
     flex-wrap: nowrap !important;
     justify-content: flex-start;
-    gap: 0.2rem;
+    gap: 0.22rem;
     min-width: 0;
     max-width: none;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 0.1rem 0.15rem 0.25rem;
+    padding: 0.1rem 0.1rem 0.2rem;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     touch-action: pan-x;
@@ -2451,15 +2478,15 @@ select {
   }
 
   .chip-stack {
-    width: 42px;
-    height: 48px;
+    width: 44px;
+    height: 50px;
     flex-shrink: 0;
   }
 
   .chip-stack .stack-layer,
   .chip-stack .stack-face {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
 
   .chip-stack .l3 {
@@ -2476,7 +2503,7 @@ select {
   }
 
   .chip-stack .stack-face {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
   }
 
   .chip-stack .stack-layer {
@@ -2484,56 +2511,62 @@ select {
   }
 
   .round-ctrl {
-    width: 42px;
-    height: 42px;
-    font-size: 0.52rem;
+    width: 44px;
+    height: 44px;
+    font-size: 0.55rem;
     flex-shrink: 0;
   }
 
   .round-ctrl.repeat {
-    min-width: 42px;
+    min-width: 44px;
     width: auto;
-    padding: 0 0.45rem;
+    padding: 0 0.5rem;
   }
 
   .action-controls {
     width: 100%;
-    gap: 0.4rem;
-    padding: 0 0.15rem;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: stretch;
+    gap: 0.35rem;
+    padding: 0;
   }
 
   .play-btn {
-    padding: 0.8rem 1.1rem;
-    min-width: 4.75rem;
-    font-size: 0.95rem;
-    border-radius: 0.9rem;
+    flex: 1 1 0;
+    padding: 0.72rem 0.35rem;
+    min-width: 0;
+    font-size: 0.82rem;
+    border-radius: 0.85rem;
+    letter-spacing: 0.04em;
   }
 
   .play-btn.deal {
     width: 100%;
-    max-width: 24rem;
+    flex: 1 1 auto;
+    max-width: none;
     min-width: 0;
-    font-size: 1.08rem;
-    padding: 0.9rem 1.25rem;
+    font-size: 1.05rem;
+    padding: 0.85rem 1rem;
   }
 
   .live-status {
-    font-size: clamp(0.95rem, 4.2vw, 1.25rem);
+    font-size: clamp(0.85rem, 3.6vw, 1.1rem);
     letter-spacing: 0.06em;
   }
 
   .live-feedback {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.7rem;
+    font-size: 0.78rem;
+    padding: 0.35rem 0.65rem;
   }
 
   .table-wait-banner {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     letter-spacing: 0.08em;
   }
 
   .table-bet-hint {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
   }
 
   .chart-overlay,
@@ -2541,8 +2574,8 @@ select {
     left: 0.5rem;
     right: 0.5rem;
     width: auto;
-    top: 4.6rem;
-    max-height: calc(100dvh - 5.5rem);
+    top: 3.4rem;
+    max-height: calc(100dvh - 4.2rem);
   }
 
   .strategy-chart-img {
@@ -2563,11 +2596,103 @@ select {
   }
 
   .seat-tip {
-    max-width: 132px;
-    padding: 0.4rem 0.45rem;
+    max-width: 120px;
+    padding: 0.35rem 0.4rem;
   }
 
   .seat-tip p {
-    font-size: 0.58rem;
+    font-size: 0.55rem;
+  }
+}
+
+/* Landscape phones: match casino-app framing (table dominates, dock hugs bottom) */
+@media (max-height: 520px) and (orientation: landscape) {
+  .live-casino {
+    min-height: 100dvh;
+    min-height: 100svh;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .live-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "brand actions";
+    padding: 0.25rem 0.5rem;
+    padding-top: max(0.25rem, env(safe-area-inset-top));
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+  }
+
+  .live-top-stats,
+  .live-meta,
+  .dealer-backdrop {
+    display: none;
+  }
+
+  .live-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .table-scale-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .live-table {
+    top: 50%;
+    left: 50%;
+  }
+
+  .live-hud {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 0.25rem 0.5rem max(0.25rem, env(safe-area-inset-bottom));
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(6, 8, 10, 0.75)
+    );
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .action-controls {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+  }
+
+  .play-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.55rem 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  .chip-stack {
+    width: 40px;
+    height: 46px;
+  }
+
+  .chip-stack .stack-layer,
+  .chip-stack .stack-face {
+    width: 36px;
+    height: 36px;
   }
 }
