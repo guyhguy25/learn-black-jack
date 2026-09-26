@@ -2361,3 +2361,32 @@ select {
     height: 82px;
   }
 }
+
+/* Phone: native app later — show a holding message instead of the desktop table */
+.mobile-wip {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .live-casino {
+    display: none !important;
+  }
+
+  .mobile-wip {
+    display: grid;
+    place-items: center;
+    min-height: 100dvh;
+    min-height: 100svh;
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--page-bg);
+    color: var(--page-fg);
+  }
+
+  .mobile-wip p {
+    margin: 0;
+    font-family: var(--font-display), Georgia, serif;
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+    letter-spacing: 0.06em;
+  }
+}
