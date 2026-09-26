@@ -339,6 +339,10 @@ export function BlackjackGame() {
   };
 
   return (
+    <>
+    <div className="mobile-wip" role="status">
+      <p>In progress</p>
+    </div>
     <div className="live-casino">
       <header className="live-top">
         <div className="live-top-left">
@@ -826,5 +830,6 @@ export function BlackjackGame() {
         bankroll={sharedBankroll}
       />
     </div>
+    </>
   );
 }
